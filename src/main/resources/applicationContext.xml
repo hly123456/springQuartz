@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:tx="http://www.springframework.org/schema/tx" 
+	xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="
+	 http://www.springframework.org/schema/beans 
+	 http://www.springframework.org/schema/beans/spring-beans-4.1.xsd 
+	 http://www.springframework.org/schema/context 
+	 http://www.springframework.org/schema/context/spring-context-4.1.xsd 
+	 http://www.springframework.org/schema/aop 
+	 http://www.springframework.org/schema/aop/spring-aop-4.1.xsd 
+	 http://www.springframework.org/schema/tx 
+	 http://www.springframework.org/schema/tx/spring-tx-4.1.xsd
+	 http://www.springframework.org/schema/task  
+     http://www.springframework.org/schema/task/spring-task-4.1.xsd
+	 ">
+	 
+	<!--配置作业类JobDetailBean 使用MethodInvokingJobDetailFactoryBean，任务类可以不实现Job接口，通过targetMethod指定调用方法  -->
+	<bean id="job1" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<bean class="com.task.TaskJob2" />
+		</property>
+		<property name="targetMethod" value="job1" />
+		<property name="concurrent" value="false" /><!-- 作业不并发调度 --><!--false表示等上一个任务执行完后再开启新的任务-->
+		<property name="group" value="job_work"/>
+    	<property name="name" value="job_work_name"/>
+	</bean>
+	<!-- 配置作业调度的触发方式（触发器） -->
+	<!-- <bean id="simpleTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+		<property name="jobDetail" ref="job1" />
+		<property name="startDelay" value="0" />调度工厂实例化后，经过0秒开始执行调度
+		<property name="repeatInterval" value="2000" />每2秒调度一次
+	</bean> -->
+	
+	<bean id="cronTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">  
+		<property name="name" value="work_default_name"/>
+    	<property name="group" value="work_default"/>
+		<property name="jobDetail" ref="job1" />  
+		<property name="cronExpression" value="0 * * * * ?" />  
+	</bean> 
+	
+	<!-- 配置调度工厂  -->
+	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="cronTrigger" />
+			</list>
+		</property>
+	</bean>
+</beans>
